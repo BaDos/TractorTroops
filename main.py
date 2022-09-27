@@ -30,7 +30,9 @@ class TractorTroops:
     def run(self):
         while self.running:
             self.clock.tick(5)
-            self.screen.fill((0, 0, 0))
+            bg = pygame.image.load("./img/field.png").convert()
+            self.screen.blit(bg, (0, 0))
+
             self.tractor.update()
             self.screen.blit(self.tractor.surf, self.tractor.rect)
             pygame.display.flip()
