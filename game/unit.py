@@ -1,7 +1,8 @@
 import pygame
+from abc import ABC, abstractmethod
 
 
-class Tractor(pygame.sprite.Sprite):
+class Unit(pygame.sprite.Sprite, ABC):
     D_UP = "up"
     D_DOWN = "down"
     D_LEFT = "left"
@@ -9,7 +10,54 @@ class Tractor(pygame.sprite.Sprite):
     D_STOP = "stop"
 
     def __init__(self, init_x, init_y):
-        super(Tractor, self).__init__()
+        super(Unit, self).__init__()
+        self.__init_surf__()
+        self.init_x = init_x
+        self.init_y = init_y
+        self.rect.x = init_x
+        self.rect.y = init_y
+        self.prev_x = init_x
+        self.prev_y = init_y
+        self.direction = self.D_STOP
+
+    @abstractmethod
+    def __init_surf__(self):
+        pass
+
+
+class Tank(Unit):
+    def __init__(self, init_x, init_y, towed=False):
+        super(Tank, self).__init__(init_x, init_y)
+        self.towed = towed
+
+    def __init_surf__(self):
+        self.surfaces = {
+            self.D_STOP: pygame.image.load("./img/tank_up.png").convert_alpha(),
+            self.D_UP: pygame.image.load("./img/tank_up.png").convert_alpha(),
+            self.D_DOWN: pygame.image.load("./img/tank_down.png").convert_alpha(),
+            self.D_LEFT: pygame.image.load("./img/tank_left.png").convert_alpha(),
+            self.D_RIGHT: pygame.image.load("./img/tank_right.png").convert_alpha(),
+        }
+        self.surf = self.surf = self.surfaces[self.D_UP]
+        self.rect = self.surf.get_rect()
+
+    def update(self):
+        if self.prev_y < self.rect.y:
+            self.surf = self.surf = self.surfaces[self.D_UP]
+        if self.prev_y > self.rect.y:
+            self.surf = self.surf = self.surfaces[self.D_DOWN]
+        if self.prev_x < self.rect.x:
+            self.surf = self.surf = self.surfaces[self.D_LEFT]
+        if self.prev_x > self.rect.x:
+            self.surf = self.surf = self.surfaces[self.D_RIGHT]
+
+
+class Tractor(Unit):
+    def __init__(self, init_x, init_y):
+        super(Tractor, self).__init__(init_x, init_y)
+        self.towed_tanks = []
+
+    def __init_surf__(self):
         self.surfaces = {
             self.D_STOP: pygame.image.load("./img/tractor_up.png").convert_alpha(),
             self.D_UP: pygame.image.load("./img/tractor_up.png").convert_alpha(),
@@ -17,18 +65,18 @@ class Tractor(pygame.sprite.Sprite):
             self.D_LEFT: pygame.image.load("./img/tractor_left.png").convert_alpha(),
             self.D_RIGHT: pygame.image.load("./img/tractor_right.png").convert_alpha(),
         }
-        self.surf = pygame.image.load("./img/tractor_up.png").convert_alpha()
+        self.surf = self.surfaces[self.D_UP]
         self.rect = self.surf.get_rect()
-        self.init_x = init_x
-        self.init_y = init_y
-        self.rect.x = init_x
-        self.rect.y = init_y
-        self.direction = self.D_STOP
+
+    def add_towed_tank(self, tank: Tank):
+        tank.towed = True
+        self.towed_tanks.append(tank)
 
     def reset(self):
         self.direction = self.D_STOP
         self.rect.x = self.init_x
         self.rect.y = self.init_y
+        self.towed_tanks = []
 
     def set_direction(self, direction):
         self.direction = direction
@@ -36,13 +84,35 @@ class Tractor(pygame.sprite.Sprite):
     def update(self):
         if self.direction == self.D_UP:
             self.surf = self.surfaces[self.D_UP]
+            self.prev_x = self.rect.x
+            self.prev_y = self.rect.y
             self.rect.move_ip(0, -32)
         if self.direction == self.D_DOWN:
             self.surf = self.surfaces[self.D_DOWN]
+            self.prev_x = self.rect.x
+            self.prev_y = self.rect.y
             self.rect.move_ip(0, 32)
         if self.direction == self.D_LEFT:
             self.surf = self.surfaces[self.D_LEFT]
+            self.prev_x = self.rect.x
+            self.prev_y = self.rect.y
             self.rect.move_ip(-32, 0)
         if self.direction == self.D_RIGHT:
+            self.prev_x = self.rect.x
+            self.prev_y = self.rect.y
             self.surf = self.surfaces[self.D_RIGHT]
             self.rect.move_ip(32, 0)
+
+        for tank_index, tank in enumerate(self.towed_tanks):
+            tank.prev_x = tank.rect.x
+            tank.prev_y = tank.rect.y
+
+            if tank_index == 0:
+                tank.rect.x = self.prev_x
+                tank.rect.y = self.prev_y
+            else:
+                tank.rect.x = self.towed_tanks[tank_index - 1].prev_x
+                tank.rect.y = self.towed_tanks[tank_index - 1].prev_y
+
+            tank.update()
+

@@ -12,7 +12,7 @@ from pygame.locals import (
     QUIT,
 )
 
-from game.unit import Tractor
+from game.unit import Tractor, Tank
 
 
 class TractorTroops:
@@ -21,6 +21,10 @@ class TractorTroops:
 
     def __init__(self):
         pygame.init()
+        pygame.display.set_caption("Tractor Troops")
+        ico = pygame.image.load("./img/tractor_up.png")
+        pygame.display.set_icon(ico)
+
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.tractor = Tractor(self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 2)
@@ -35,6 +39,9 @@ class TractorTroops:
 
             self.tractor.update()
             self.screen.blit(self.tractor.surf, self.tractor.rect)
+            for tank in self.tractor.towed_tanks:
+                self.screen.blit(tank.surf, tank.rect)
+
             pygame.display.flip()
 
             if self.check_collisions():
