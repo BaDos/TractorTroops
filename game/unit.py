@@ -9,15 +9,12 @@ class Unit(pygame.sprite.Sprite, ABC):
     D_RIGHT = "right"
     D_STOP = "stop"
 
-    def __init__(self, init_x, init_y):
+    def __init__(self, coordinates):
         super(Unit, self).__init__()
         self.__init_surf__()
-        self.init_x = init_x
-        self.init_y = init_y
-        self.rect.x = init_x
-        self.rect.y = init_y
-        self.prev_x = init_x
-        self.prev_y = init_y
+        self.init_x, self.init_y = coordinates
+        self.rect.x, self.rect.y = coordinates
+        self.prev_x, self.prev_y = coordinates
         self.direction = self.D_STOP
 
     @abstractmethod
@@ -26,8 +23,8 @@ class Unit(pygame.sprite.Sprite, ABC):
 
 
 class Tank(Unit):
-    def __init__(self, init_x, init_y, towed=False):
-        super(Tank, self).__init__(init_x, init_y)
+    def __init__(self, coordinates, towed=False):
+        super(Tank, self).__init__(coordinates)
         self.towed = towed
 
     def __init_surf__(self):
@@ -53,9 +50,9 @@ class Tank(Unit):
 
 
 class Tractor(Unit):
-    def __init__(self, init_x, init_y):
-        super(Tractor, self).__init__(init_x, init_y)
-        self.towed_tanks = []
+    def __init__(self, coordinates):
+        super(Tractor, self).__init__(coordinates)
+        self.towed_tanks = pygame.sprite.Group()
 
     def __init_surf__(self):
         self.surfaces = {
@@ -70,13 +67,13 @@ class Tractor(Unit):
 
     def add_towed_tank(self, tank: Tank):
         tank.towed = True
-        self.towed_tanks.append(tank)
+        self.towed_tanks.add(tank)
 
     def reset(self):
         self.direction = self.D_STOP
         self.rect.x = self.init_x
         self.rect.y = self.init_y
-        self.towed_tanks = []
+        self.towed_tanks.empty()
 
     def set_direction(self, direction):
         self.direction = direction
@@ -103,16 +100,18 @@ class Tractor(Unit):
             self.surf = self.surfaces[self.D_RIGHT]
             self.rect.move_ip(32, 0)
 
-        for tank_index, tank in enumerate(self.towed_tanks):
+        prev_tank = None
+        for tank in self.towed_tanks:
             tank.prev_x = tank.rect.x
             tank.prev_y = tank.rect.y
 
-            if tank_index == 0:
+            if isinstance(prev_tank, Tank):
+                tank.rect.x = prev_tank.prev_x
+                tank.rect.y = prev_tank.prev_y
+            else:
                 tank.rect.x = self.prev_x
                 tank.rect.y = self.prev_y
-            else:
-                tank.rect.x = self.towed_tanks[tank_index - 1].prev_x
-                tank.rect.y = self.towed_tanks[tank_index - 1].prev_y
+
+            prev_tank = tank
 
             tank.update()
-
