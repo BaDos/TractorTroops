@@ -23,9 +23,8 @@ class Unit(pygame.sprite.Sprite, ABC):
 
 
 class Tank(Unit):
-    def __init__(self, coordinates, towed=False):
+    def __init__(self, coordinates):
         super(Tank, self).__init__(coordinates)
-        self.towed = towed
 
     def __init_surf__(self):
         self.surfaces = {
@@ -40,13 +39,13 @@ class Tank(Unit):
 
     def update(self):
         if self.prev_y < self.rect.y:
-            self.surf = self.surf = self.surfaces[self.D_UP]
+            self.surf = self.surfaces[self.D_UP]
         if self.prev_y > self.rect.y:
-            self.surf = self.surf = self.surfaces[self.D_DOWN]
+            self.surf = self.surfaces[self.D_DOWN]
         if self.prev_x < self.rect.x:
-            self.surf = self.surf = self.surfaces[self.D_LEFT]
+            self.surf = self.surfaces[self.D_LEFT]
         if self.prev_x > self.rect.x:
-            self.surf = self.surf = self.surfaces[self.D_RIGHT]
+            self.surf = self.surfaces[self.D_RIGHT]
 
 
 class Tractor(Unit):

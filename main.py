@@ -35,7 +35,7 @@ class TractorTroops:
 
     def run(self):
         while self.running:
-            self.clock.tick(5)
+            self.clock.tick(5 + 1 * self.score)
 
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
@@ -69,6 +69,7 @@ class TractorTroops:
             if self.is_good_collision():
                 self.tractor.add_towed_tank(self.tank)
                 self.tank = self.create_tank()
+                self.score += 1
 
         self.quit()
 
